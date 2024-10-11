@@ -16,7 +16,17 @@ async function scrape(year, month) {
   console.log(year, month, 'tournaments:', tournaments.length);
   fs.writeFileSync(`tournaments-${year}-${month}.json`, JSON.stringify(tournaments, null, 2));
 }
-
+async function fetchFromGithubPages(year, month) {  
+  const baseUrl = 'https://pbochynski.github.io/chess-info/';
+  let filename = `tournaments-${year}-${month}.json`;
+  let url = `${baseUrl}${filename}`;
+  let response = await fetch(url);
+  if (response.status === 200) {
+    let data = await response.text();
+    fs.writeFileSync(filename, data);
+  }
+  console.log('Fetched', filename);
+}
 
 async function scrapeAll(skipExisting = true) {
   let endDate = new Date();
@@ -27,6 +37,7 @@ async function scrapeAll(skipExisting = true) {
   
   while (monthsToScrape > 0) {
     let filename = `tournaments-${year}-${month}.json`;  
+    await fetchFromGithubPages(year, month);
     if (skipExisting && fs.existsSync(filename)) {
       console.log('Skipping', filename);
     } else {
