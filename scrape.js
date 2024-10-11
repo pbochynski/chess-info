@@ -33,7 +33,7 @@ async function scrapeAll(skipExisting = true) {
   endDate.setMonth(endDate.getMonth() + 3);
   let year = endDate.getFullYear();
   let month = endDate.getMonth()+1; // 0-based to 1-based
-  let monthsToScrape = 6; 
+  let monthsToScrape = 12; 
   
   while (monthsToScrape > 0) {
     let filename = `tournaments-${year}-${month}.json`;  
