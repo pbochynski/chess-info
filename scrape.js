@@ -4,7 +4,7 @@ import ThrottledFetch from './throttle.js'
 import * as fs from 'fs';
 
 const MONTHS_AHEAD = process.env.MONTHS_AHEAD || 4;
-const MONTHS_BACK = process.env.MONTHS_BACK || 24;
+const MONTHS_BACK = process.env.MONTHS_BACK || 36;
 const queue = new ThrottledFetch(10, "GithubPages")
 
 async function scrape(year, month) {
