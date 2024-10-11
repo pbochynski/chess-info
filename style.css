@@ -1,0 +1,95 @@
+/* Reset some default styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Body styling */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f4f4f9;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Container for search input and button */
+.search-container {
+  display: flex;
+  width: 100%;
+  max-width: 600px;
+  margin-bottom: 20px;
+}
+
+#search {
+  flex: 1;
+  padding: 10px 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px 0 0 4px;
+  font-size: 16px;
+}
+
+#search:focus {
+  outline: none;
+  border-color: #007BFF;
+}
+
+/* Search button styling */
+#search-btn {
+  padding: 10px 20px;
+  border: none;
+  background-color: #007BFF;
+  color: white;
+  font-size: 16px;
+  border-radius: 0 4px 4px 0;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#search-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Tournaments container */
+#tournaments {
+  width: 100%;
+  max-width: 800px;
+}
+
+/* Individual tournament card */
+.tournament {
+  background-color: white;
+  padding: 15px 20px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tournament:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+/* Tournament title */
+.tournament p {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.tournament a {
+  text-decoration: none;
+  color: #007BFF;
+}
+
+.tournament a:hover {
+  text-decoration: underline;
+}
+
+/* Tournament details */
+.tournament small {
+  color: #666;
+}
