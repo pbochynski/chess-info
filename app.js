@@ -68,12 +68,12 @@ async function loadTournaments() {
 }
 function playerSearchScore(tournament, params) {
   let score = 0
-  if (!tournament.players) 
+  if (!tournament.players)
     return 0;
-  let qp = params.filter(p => p.key.startsWith('player.')).map(p => {return {key:p.key.slice(7), value:p.value}});
+  let qp = params.filter(p => p.key.startsWith('player.')).map(p => { return { key: p.key.slice(7), value: p.value } });
   if (qp.length === 0) {
     return 0;
-  } 
+  }
 
   tournament.players.forEach(p => {
     let ok = true;
@@ -96,7 +96,7 @@ function searchScore(tournament, query) {
   let params = parseQueryString(query);
   if (params.some(p => p.key.startsWith('player.'))) {
     score += playerSearchScore(tournament, params);
-    if (score==0) {
+    if (score == 0) {
       return 0;
     }
   }
@@ -108,7 +108,7 @@ function searchScore(tournament, query) {
         break;
       }
       score += 1;
-    }      
+    }
   }
   if (!ok) {
     score = 0;
@@ -128,29 +128,67 @@ function search(query) {
   return tournaments.filter(t => t.score > 0).sort((a, b) => b.date.localeCompare(a.date));
 }
 
+async function performSearch(query) {
+  const tournamentsContainer = document.getElementById("tournaments");
+  let tournaments = search(query);
+  console.log("search results:", tournaments.length);
+  tournamentsContainer.innerHTML = "";
+  tournaments.forEach(tournament => {
+    tournamentsContainer.appendChild(tournamentDiv(tournament));
+  });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const searchBtn = document.getElementById("search-btn");
   const searchInput = document.getElementById("search");
-  const tournamentsContainer = document.getElementById("tournaments");
 
+  // Search button click event
   searchBtn.onclick = async () => {
-    let query = searchInput.value;
-    let tournaments = search(query);
-    console.log("search results:", tournaments.length);
-    tournamentsContainer.innerHTML = "";
-    tournaments.forEach(tournament => {
-      tournamentsContainer.appendChild(tournamentDiv(tournament));
-    });
+    let query = searchInput.value.trim();
+    if (query === "") {
+      // Optionally handle empty searches
+      return;
+    }
+
+    // Update the URL with the search query
+    const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}`;
+    history.pushState({ query }, "", newUrl);
+
+    // Perform the search and update the UI
+    performSearch(query);
   };
 
-  // **New: Keydown event for the Enter key on the search input**
+  // Enter key event listener
   searchInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
-      event.preventDefault(); // Prevents the default action, if any
-      searchBtn.click();      // Triggers the search button click
+      event.preventDefault();
+      searchBtn.click();
     }
   });
 
-  loadTournaments();
+  // Handle back/forward navigation
+  window.addEventListener("popstate", (event) => {
+    if (event.state && event.state.query) {
+      searchInput.value = event.state.query;
+      performSearch(event.state.query);
+    } else {
+      // Optionally handle the state when there's no query (e.g., clear results)
+      searchInput.value = "";
+      tournamentsContainer.innerHTML = "";
+    }
+  });
 
-})
+  // On initial load, check if there's a query in the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialQuery = urlParams.get('q');
+  if (initialQuery) {
+    searchInput.value = initialQuery;
+    // Replace the state to ensure popstate works correctly
+    history.replaceState({ query: initialQuery }, "", window.location.href);
+    performSearch(initialQuery);
+  }
+
+  // Load tournaments data
+  loadTournaments().then(() => {performSearch(initialQuery)});
+
+});

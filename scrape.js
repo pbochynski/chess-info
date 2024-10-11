@@ -30,10 +30,10 @@ async function fetchFromGithubPages(year, month) {
 
 async function scrapeAll(skipExisting = true) {
   let endDate = new Date();
-  endDate.setMonth(endDate.getMonth() + 6);
+  endDate.setMonth(endDate.getMonth() + 3);
   let year = endDate.getFullYear();
   let month = endDate.getMonth()+1; // 0-based to 1-based
-  let monthsToScrape = 5 * 12 + 6; // 5 years back + 6 months ahead
+  let monthsToScrape = 6; 
   
   while (monthsToScrape > 0) {
     let filename = `tournaments-${year}-${month}.json`;  
