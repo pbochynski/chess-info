@@ -3,8 +3,7 @@ import { fetchTournaments as cmTournaments} from "./chessmanager-scraper.js";
 import ThrottledFetch from './throttle.js'
 import * as fs from 'fs';
 
-const MONTHS_AHEAD = process.env.MONTHS_AHEAD || 4;
-const MONTHS_BACK = process.env.MONTHS_BACK || 48;
+
 const queue = new ThrottledFetch(10, "GithubPages")
 
 async function scrape(year, month) {
@@ -34,10 +33,10 @@ async function fetchFromGithubPages(year, month) {
 }
 async function fetchAll() {
   let endDate = new Date();
-  endDate.setMonth(endDate.getMonth() + MONTHS_AHEAD);
+  endDate.setMonth(endDate.getMonth() + 6);
   let year = endDate.getFullYear();
   let month = endDate.getMonth()+1; // 0-based to 1-based
-  let monthsToScrape = MONTHS_BACK; 
+  let monthsToScrape = 66; 
   let tasks = []; 
   while (monthsToScrape > 0) {
     tasks.push(fetchFromGithubPages(year, month));
@@ -51,28 +50,24 @@ async function fetchAll() {
   await Promise.allSettled(tasks);
 }
 
-async function scrapeAll(skipExisting = true) {
-  let endDate = new Date();
-  endDate.setMonth(endDate.getMonth() + MONTHS_AHEAD);
-  let year = endDate.getFullYear();
-  let month = endDate.getMonth()+1; // 0-based to 1-based
-  let monthsToScrape = MONTHS_BACK; 
+async function scrapeAll() {
+  let startDate = process.env.START_DATE || new Date().toISOString().slice(0, 7);
+  let d = new Date();
+  d.setMonth(d.getMonth() + 6);
+  let endDate = process.env.END_DATE || process.env.START_DATE || d.toISOString().slice(0, 7);
   await fetchAll();
   
-  while (monthsToScrape > 0) {
-    let filename = `tournaments-${year}-${month}.json`;  
-    if (skipExisting && fs.existsSync(filename)) {
-      console.log('Skipping', filename);
+  while (startDate<=endDate) {
+    let year = Number(startDate.slice(0, 4));
+    let month = Number(startDate.slice(5, 7));
+    await scrape(year, month);
+    if (month === 12) {
+      year++;
+      month = 1;
     } else {
-      await scrape(year, month);
+      month++;
     }
-    // new Date(year, month).getTime() > new Date().getTime()) {
-    month--;
-    if (month < 1) {
-      year--;
-      month = 12;
-    }
-    monthsToScrape--;
+    startDate = `${year}-${month.toString().padStart(2, '0')}`;
   }  
 }
 scrapeAll();

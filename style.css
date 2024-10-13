@@ -93,3 +93,47 @@ body {
 .tournament small {
   color: #666;
 }
+
+/* Manual Section */
+.manual-container {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.manual-btn {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.manual-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Collapsible Manual Content */
+.manual-content {
+  display: block;
+  transition: all 0.3s ease-in-out;
+}
+
+.manual-content-hidden {
+  display: none;
+}
+
+.manual-content h2, .manual-content h3 {
+  color: #007bff;
+}
+
+.manual-content p {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #333;
+}

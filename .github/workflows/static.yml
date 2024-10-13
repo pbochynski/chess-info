@@ -8,6 +8,15 @@ on:
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      START_DATE:
+        description: 'Start date in yyyy-mm format'
+        required: true
+        default: '2024-10'
+      END_DATE:
+        description: 'End date in yyyy-mm format'
+        required: true
+        default: '2025-02'
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -39,7 +48,9 @@ jobs:
         run: |
           # Run your build script here
           node scrape.js
-
+        env:
+          START_DATE: ${{ github.event.inputs.START_DATE }}
+          END_DATE: ${{ github.event.inputs.END_DATE }}
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

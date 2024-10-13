@@ -129,15 +129,13 @@ async function fetchTournaments(year, month) {
     offset = offsets[currentOffsetIndex + 1]  
   }
   let tasks = []
+
   for (let tournament of tournaments) {
     tasks.push(fetchTournament(tournament)) 
   }
   await Promise.allSettled(tasks)
-  // filter out tournaments without date or with date not matching year and month params
-  // month is padded with 0 
-  console.log(`Filtering ${tournaments.length} tournaments by date`)
+
   tournaments = tournaments.filter(t => t.date && t.date.startsWith(`${year}-${month.toString().padStart(2, '0')}`))
-  console.log(`Filtered ${tournaments.length} tournaments by date`)
   return tournaments
 }
 function parseContent(html) {
@@ -154,14 +152,20 @@ function extractTournaments(html) {
   const regex = /(<a\s+.*?href="https:\/\/www.chessmanager.com\/en\/tournaments\/(\d*)">(\s|.*)*?<\/a>)/gm
   let match
   while ((match = regex.exec(html)) !== null) {
+    const liRegex = /<i.*?\/i>(.*\n.*)\n/gm
     let id = match[2]
     let content = match[1]
     let tournament = parseContent(content)
     tournament.id = id
     tournament.link = `https://www.chessmanager.com/en/tournaments/${id}`
+    tournament.hasPlayers = content.match(/<i class="users icon">/gm) ? true : false
+    tournament.finished = content.match(/<i class="flag checkered icon">/gm) ? true : false
     tournaments.push(tournament)
   }
   return tournaments 
 }
 
 export { fetchTournaments}
+
+// let t = await fetchTournaments(2024, 9)
+// console.log(t)

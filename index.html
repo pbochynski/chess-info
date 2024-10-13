@@ -1,21 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Chess Info</title>
-    <link href="style.css" rel="stylesheet">
-  </head>
-  <body>
-    <!-- Search Container -->
-    <div class="search-container">
-      <input type="text" id="search" placeholder="Search by date, name, or player..." />
-      <button id="search-btn">Search</button>
-    </div>
 
-    <!-- Tournaments List -->
-    <div id="tournaments"></div>
-    
-    <script type="module" src="app.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chess Info</title>
+  <link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+  <!-- Search Container -->
+  <div class="search-container">
+    <input type="text" id="search" placeholder="Search by date, name, or player..." />
+    <button id="search-btn">Search</button>
+  </div>
+
+  <!-- Collapsible Manual Section -->
+    <!-- Manual Section -->
+
+  <!-- Tournaments List -->
+  <div id="tournaments"></div>
+  <div id="manual-content" class="manual-content">
+    <h4>Wyszukiwarka turniejów szachowych</h4>
+    <p>Wpisz w okno wyszukiwania frazę występującą w nazwie turnieju. Możesz też użyć prefiksów, by wyszukiwać po innych atrybutach lub wśród uczestników turnieju. Przykłady:</p>
+    <p></p>
+    <p>player.name:"Carlsem, Magnus"</p>
+    <p>date:2024-10 player.birthday:2012</p>
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <script>
+    function toggleManual() {
+      const manualContent = document.getElementById('manual-content');
+      const toggleButton = document.getElementById('manual-toggle');
+      manualContent.classList.toggle('manual-content-hidden');
+      toggleButton.textContent = manualContent.classList.contains('manual-content-hidden') 
+        ? 'Show Manual' 
+        : 'Hide Manual';
+    }
+  </script>
+</body>
+
 </html>
