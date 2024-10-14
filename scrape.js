@@ -36,7 +36,7 @@ async function fetchAll() {
   endDate.setMonth(endDate.getMonth() + 6);
   let year = endDate.getFullYear();
   let month = endDate.getMonth()+1; // 0-based to 1-based
-  let monthsToScrape = 66; 
+  let monthsToScrape = 126; // 10 years back + 6 months ahead 
   let tasks = []; 
   while (monthsToScrape > 0) {
     tasks.push(fetchFromGithubPages(year, month));
