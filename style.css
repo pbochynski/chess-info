@@ -15,7 +15,10 @@ body {
   align-items: center;
   padding: 20px;
 }
-
+code {
+  font-family: Consolas, monospace;
+  color: chocolate;
+}
 /* Container for search input and button */
 .search-container {
   display: flex;
@@ -67,6 +70,10 @@ body {
   border-radius: 6px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.tournament.archive {
+  background-color: #e8e9ea;
 }
 
 .tournament:hover {

@@ -5,6 +5,9 @@ let tournaments = [];
 function tournamentDiv(tournament) {
   const div = document.createElement('div');
   div.classList.add('tournament');
+  if (tournament.date < new Date().toISOString().slice(0, 10)) {
+    div.classList.add('archive');
+  }
   const title = document.createElement('p');
   const a = document.createElement('a');
   a.href = tournament.link;
@@ -117,7 +120,20 @@ function searchScore(tournament, query) {
 
 }
 
+function sortByDate(a, b) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (a.date < today && b.date >= today) {
+    return 1;
+  }
+  if (b.date < today && a.date >= today) {
+    return -1;
+  }
+  if (a.date < today && b.date < today) {
+    return b.date.localeCompare(a.date);
+  }
+  return a.date.localeCompare(b.date);
 
+}
 
 function search(query) {
   console.log("searching for", query);
@@ -125,7 +141,7 @@ function search(query) {
     tournament.score = searchScore(tournament, query);
   }
   // filter by score > 0 and sort by date
-  return tournaments.filter(t => t.score > 0).sort((a, b) => b.date.localeCompare(a.date));
+  return tournaments.filter(t => t.score > 0).sort(sortByDate);
 }
 
 async function performSearch(query) {

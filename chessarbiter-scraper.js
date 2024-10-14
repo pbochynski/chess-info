@@ -5,6 +5,7 @@ import ThrottledFetch from './throttle.js';
 const queue = new ThrottledFetch(10, "ChessArbiter")
 
 
+
 async function fetchTournaments(year, month) {
   const tournamentsUrl = `http://www.chessarbiter.com/turnieje.php\?rok\=${year}\&miesiac\=${month}`;
   console.log(tournamentsUrl)
@@ -27,10 +28,38 @@ async function fetchPlayer(tournament, n) {
   tournament.players.push(player)
   return player
 }
+
+async function fetchCaproPlayers(tournament) {
+  const caproUrl = `https://www.chessarbiter.com/turnieje/${tournament.year}/${tournament.id}/capro_tournament.js`
+  let res = await queue.throttledFetch(caproUrl)
+  let txt = await res.text()
+  let arrayRegex = /var (A\d+) = (.*);/gm
+  let match
+  let a = {}
+  while ((match = arrayRegex.exec(txt)) !== null) {
+    let arrayId = match[1]
+    let array = JSON.parse(decodeHtmlEntities(match[2]))
+    a[arrayId] = array
+  }
+  if (a['A11']) {
+    let players = a['A11'].map((name, i) => {
+      return {
+        name,
+        birthday: a['A18'][i],
+        club: a['A17'][i],
+        localID: a['A109'][i]
+      }
+    })
+    tournament.players = players 
+  }
+  return tournament.players
+}
+
 async function fetchPlayers(tournament) {
   const playersUrl = `http://www.chessarbiter.com/turnieje/${tournament.year}/${tournament.id}/list_of_players`
   let res = await queue.throttledFetch(playersUrl)
   if (res.status !== 200) {
+    await fetchCaproPlayers(tournament)
     return []
   }
 
@@ -128,3 +157,6 @@ function extractPlayer(html) {
 }
 
 export { fetchTournaments }
+
+// let p = await fetchCaproPlayers({year: 2022, id: "ti_5305"})
+// console.log(p)
