@@ -17,6 +17,9 @@ on:
         description: 'End date in yyyy-mm format'
         required: true
         default: '2025-02'
+  
+  schedule:
+    - cron: '0 */1 * * *'
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -44,6 +47,15 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Set dates for cron jobs
+        if: github.event_name == 'schedule'
+        run: |
+          START_DATE=$(date +'%Y-%m')
+          END_DATE=$(date -v +6m +'%Y-%m' 2>/dev/null || date -d "+6 months" +'%Y-%m')
+          echo "START_DATE=$START_DATE" >> $GITHUB_ENV
+          echo "END_DATE=$END_DATE" >> $GITHUB_ENV
+
       - name: Run scraping
         run: |
           # Run your build script here

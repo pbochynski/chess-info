@@ -51,11 +51,13 @@ async function fetchAll() {
 }
 
 async function scrapeAll() {
-  let startDate = process.env.START_DATE || new Date().toISOString().slice(0, 7);
-  let d = new Date();
-  d.setMonth(d.getMonth() + 6);
-  let endDate = process.env.END_DATE || process.env.START_DATE || d.toISOString().slice(0, 7);
   await fetchAll();
+  let startDate = process.env.START_DATE 
+  let endDate = process.env.END_DATE
+  if (!startDate || !endDate) {
+    console.log('Skipping update. Please provide START_DATE and END_DATE environment variables to update data.');
+    return;
+  }
   
   while (startDate<=endDate) {
     let year = Number(startDate.slice(0, 4));
