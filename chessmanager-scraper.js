@@ -16,9 +16,12 @@ function parseTournament(html, tournament) {
     for (let l of labels) {
       if (label.includes(l)) {
         let key = l.toLocaleLowerCase()
-        let value = match[1] + (match[2] ? match[2] : "")
-        value = value.replace(/<br.*?>/g, " ")
-        tournament[key] = value
+        if (key === "city") {
+          tournament[key] = match[1].replace(/<.*?>/g, "").trim()
+        }else {
+          let value = match[1] + (match[2] ? match[2] : "")
+          tournament[key] = value.replace(/<.*?>/g, " ").trim()
+        }
       }
     }
   }

@@ -2,9 +2,10 @@ import { fetchTournaments as caTournaments} from "./chessarbiter-scraper.js";
 import { fetchTournaments as cmTournaments} from "./chessmanager-scraper.js";
 import ThrottledFetch from './throttle.js'
 import * as fs from 'fs';
-
+import Geo from './geo.js'; 
 
 const queue = new ThrottledFetch(10, "GithubPages")
+const geo = new Geo();
 
 async function scrape(year, month) {
   let tasks = [];
@@ -17,7 +18,9 @@ async function scrape(year, month) {
       tournaments.push(...result.value);
     }
   }
+  tournaments = geo.addGeoTags(tournaments);
   console.log(year, month, 'tournaments:', tournaments.length);
+  
   fs.writeFileSync(`tournaments-${year}-${month}.json`, JSON.stringify(tournaments, null, 2));
 }
 async function fetchFromGithubPages(year, month) {  
@@ -50,8 +53,33 @@ async function fetchAll() {
   await Promise.allSettled(tasks);
 }
 
+function addGeoTags(tournaments) {
+  for (let t of tournaments) {
+    let best = geo.find(t.city);  
+    if (best) {
+      t.geo = best
+    }
+  }
+  return tournaments;
+}
+
+function addGeoTagsToFiles() {
+  // scan current directory for files with tournaments
+  let files = fs.readdirSync('.');
+  for (let file of files) {
+    if (file.startsWith('tournaments-') && file.endsWith('.json')) {
+      let tournaments = JSON.parse(fs.readFileSync(file, 'utf8'));
+      console.log('Processing', file);
+      addGeoTags(tournaments);
+      fs.writeFileSync(file, JSON.stringify(tournaments, null, 2));
+    }
+  }
+}
+
+
 async function scrapeAll() {
   await fetchAll();
+  // addGeoTagsToFiles();
   let startDate = process.env.START_DATE 
   let endDate = process.env.END_DATE
   if (!startDate || !endDate) {

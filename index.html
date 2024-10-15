@@ -6,6 +6,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Chess Info</title>
   <link href="style.css" rel="stylesheet">
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCtU-0qy8ztkn85B6UlheXqeiqT1GffhhU&libraries=places"
+    defer></script>
+
 </head>
 
 <body>
@@ -16,33 +19,31 @@
   </div>
 
   <!-- Collapsible Manual Section -->
-    <!-- Manual Section -->
+  <!-- Manual Section -->
+  <!-- Main Content Container -->
+  <div class="main-content">
+    <!-- Tournaments List -->
+    <div id="tournaments" class="tournaments-list"></div>
 
-  <!-- Tournaments List -->
-  <div id="tournaments"></div>
+    <!-- Map Container -->
+    <div id="map" class="map-container"></div>
+  </div>
+
   <div id="manual-content" class="manual-content">
     <h4>Wyszukiwarka turniejów szachowych</h4>
-    <p>Wpisz w okno wyszukiwania frazę występującą w nazwie turnieju. Możesz też użyć prefiksów, by wyszukiwać po innych atrybutach lub wśród uczestników turnieju.</p>
+    <p>Wpisz w okno wyszukiwania frazę występującą w nazwie turnieju. Możesz też użyć prefiksów, by wyszukiwać po innych
+      atrybutach lub wśród uczestników turnieju.</p>
     <p>Przykłady:</p>
     <p></p>
     <p><code>date:2023 krasnal</code> - turnieje z 2023 roku które mają w nazwie słowo krasnal</p>
     <p><code>city:gliwice</code> - turnieje w Gliwicach</p>
     <p><code>player.name:"Carlsen, Magnus"</code> - turnieje w których startuje Magnus Carlsen</p>
-    <p><code>date:2024-10 player.birthday:2012</code> - turnieje w październiuku 2024 z zawodnikami urodzonymi w 2012 roku</p>
+    <p><code>date:2024-10 player.birthday:2012</code> - turnieje w październiuku 2024 z zawodnikami urodzonymi w 2012
+      roku</p>
 
   </div>
 
   <script type="module" src="app.js"></script>
-  <script>
-    function toggleManual() {
-      const manualContent = document.getElementById('manual-content');
-      const toggleButton = document.getElementById('manual-toggle');
-      manualContent.classList.toggle('manual-content-hidden');
-      toggleButton.textContent = manualContent.classList.contains('manual-content-hidden') 
-        ? 'Show Manual' 
-        : 'Hide Manual';
-    }
-  </script>
 </body>
 
 </html>

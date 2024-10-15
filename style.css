@@ -144,3 +144,40 @@ code {
   line-height: 1.5;
   color: #333;
 }
+
+/* Main Content Container */
+.main-content {
+  display: flex;
+  width: 100%;
+  max-width: 1200px;
+  margin-top: 20px;
+  gap: 20px;
+}
+
+/* Tournaments List */
+.tournaments-list {
+  flex: 1;
+  max-width: 600px;
+  overflow-y: auto;
+  height: 600px; /* Adjust as needed */
+}
+
+/* Map Container */
+.map-container {
+  flex: 2;
+  height: 600px; /* Adjust as needed */
+  min-width: 300px;
+  position: relative; /* Ensure proper positioning */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-content {
+    flex-direction: column;
+  }
+
+  .map-container,
+  .tournaments-list {
+    height: 400px;
+  }
+}
