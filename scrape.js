@@ -18,7 +18,7 @@ async function scrape(year, month) {
       tournaments.push(...result.value);
     }
   }
-  tournaments = geo.addGeoTags(tournaments);
+  tournaments = addGeoTags(tournaments);
   console.log(year, month, 'tournaments:', tournaments.length);
   
   fs.writeFileSync(`tournaments-${year}-${month}.json`, JSON.stringify(tournaments, null, 2));
