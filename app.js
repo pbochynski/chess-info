@@ -6,19 +6,31 @@ let showArchived = false;
 let tournaments = [];
 
 function initMap() {
-  // Default center of Poland
-  const defaultCenter = { lat: 52.237049, lng: 21.017532 };
 
-  map = new google.maps.Map(document.getElementById("map"), {
-    center: defaultCenter,
-    zoom: 6,
+  map = L.map('map', {
+    center: [52.237049, 19],
+    zoom: 6
   });
+  const tiles = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }).addTo(map);
+
 }
 
-
+function filter(city) {
+  const tournamentsContainer = document.getElementById("tournaments");
+  for (let tournament of tournamentsContainer.children) {
+    if (tournament.data.geo && tournament.data.geo.city === city) {
+      tournament.style.display = "block";
+    } else {
+      tournament.style.display = "none";
+    }
+  }
+}
 function addMarkers(tournaments) {
   // Clear existing markers
-  markers.forEach(marker => marker.setMap(null));
+  markers.forEach(marker => marker.remove());
   markers = [];
 
   // Filter tournaments that have geographic information
@@ -34,6 +46,8 @@ function addMarkers(tournaments) {
     grouped[key].push(t);
   });
 
+  // Define bounds to adjust viewport later
+  let bounds = [];
 
   // Iterate through each group to create markers
   for (let city in grouped) {
@@ -41,54 +55,32 @@ function addMarkers(tournaments) {
     let sampleTournament = grouped[city][0];
     let position = { lat: parseFloat(sampleTournament.geo.lat), lng: parseFloat(sampleTournament.geo.lng) };
 
-
+    // Create a custom marker icon with the tournament count inside
+    var myIcon = L.divIcon({
+      html: `<div style="background-color: blue; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 16px;">${tournamentCount}</div>`,
+      className: 'custom-marker'
+    });
 
     // Create the marker with label
-    const marker = new google.maps.Marker({
-      position,
-      map,
-      title: city,
+    const marker = L.marker([position.lat, position.lng], {
+      title: `${city} - ${tournamentCount} tournament(s)`,
+      icon: myIcon
+    }).addTo(map);
 
-      label: {
-        text: String(tournamentCount),
-        color: "white",
-        fontSize: "12px",
-        fontWeight: "bold",
-      },
-    });
+    marker.on('click', function () {
+      filter(city)
+    })
 
-    // Prepare InfoWindow content
-    let infoContent = `
-      <div>
-        <h3>${city}</h3>
-        <p>${tournamentCount} tournament${tournamentCount > 1 ? 's' : ''}</p>
-        ${grouped[city].map(t => `
-          <div style="margin-bottom: 10px;">
-            <a href="${t.link}" target="_blank"><strong>${t.title}</strong></a><br/>
-            <small>${t.date}</small>
-          </div>
-        `).join('')}
-      </div>
-    `;
-
-    // Create InfoWindow
-    const infoWindow = new google.maps.InfoWindow({
-      content: infoContent,
-    });
-
-    // Add click listener to open InfoWindow
-    marker.addListener("click", () => {
-      infoWindow.open(map, marker);
-    });
-
+    // Add the marker to the list
     markers.push(marker);
+
+    // Add the position to the bounds array for adjusting viewport
+    bounds.push([position.lat, position.lng]);
   }
 
   // Adjust map bounds to show all markers
-  if (markers.length > 0) {
-    const bounds = new google.maps.LatLngBounds();
-    markers.forEach(marker => bounds.extend(marker.getPosition()));
-    map.fitBounds(bounds);
+  if (bounds.length > 0) {
+    map.fitBounds(bounds,{maxZoom: 10});
   }
 }
 
@@ -108,6 +100,7 @@ function tournamentDiv(tournament) {
   const date = document.createElement('small');
   date.textContent = `${tournament.date}, ${tournament.city}, (${tournament.category || tournament.tempo})`;
   div.appendChild(date);
+  div.data = tournament;
   return div;
 
 
