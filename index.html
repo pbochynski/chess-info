@@ -18,15 +18,24 @@
     <button id="search-btn">Search</button>
   </div>
 
-  <!-- Collapsible Manual Section -->
-  <!-- Manual Section -->
-  <!-- Main Content Container -->
+  <!-- Control Toggles -->
+  <div class="controls-container">
+    <div class="wrapper">
+      <span>mapa</span>
+      <input type="checkbox" id="map-toggle" class="offscreen" checked/>
+      <label for="map-toggle" class="switch"></label>
+    </div>
+    <div class="wrapper">
+      <span>pokaż zakończone</span>
+      <input type="checkbox" id="arch-toggle" class="offscreen" />
+      <label for="arch-toggle" class="switch"></label>
+    </div>
+  </div>
+
   <div class="main-content">
-    <!-- Tournaments List -->
+    <div id="map" class="map-container"></div>
     <div id="tournaments" class="tournaments-list"></div>
 
-    <!-- Map Container -->
-    <div id="map" class="map-container"></div>
   </div>
 
   <div id="manual-content" class="manual-content">

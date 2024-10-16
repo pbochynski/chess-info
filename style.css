@@ -1,3 +1,5 @@
+/* Existing styles */
+
 /* Reset some default styles */
 * {
   box-sizing: border-box;
@@ -15,10 +17,12 @@ body {
   align-items: center;
   padding: 20px;
 }
+
 code {
   font-family: Consolas, monospace;
   color: chocolate;
 }
+
 /* Container for search input and button */
 .search-container {
   display: flex;
@@ -56,19 +60,96 @@ code {
   background-color: #0056b3;
 }
 
-/* Tournaments container */
-#tournaments {
-  width: 100%;
-  max-width: 800px;
+/* Controls Container */
+/* buttons are in row */
+.controls-container {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 30px;
+  max-width: 600px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  /* Allow wrapping on smaller screens */
+}
+.wrapper {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
 }
 
-/* Individual tournament card */
+.toggle-btn {
+  padding: 10px 20px;
+  border: none;
+  background-color: #28A745;
+  color: white;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: 10px;
+  /* Space below on small screens */
+}
+
+.toggle-btn:hover {
+  background-color: #218838;
+}
+
+/* Toggle Switch Styling */
+.toggle-switch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 60px;
+  height: 34px;
+  margin-bottom: 10px;
+  /* Space below on small screens */
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+
+/* Main Content Container */
+.main-content {
+  display: flex;
+  width: 100%;
+  max-width: 1600px;
+  margin-top: 20px;
+  gap: 20px;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+/* Tournaments List */
+.tournaments-list {
+  flex: 1;
+  width: 200px;
+  min-width: 400px;
+  overflow-y: auto;
+  /* Adjust as needed */
+}
+
+/* Map Container */
+.map-container {
+  flex: 1;
+  height: 80vh;
+  width: 100%;
+  min-width: 400px;
+  min-height: 500px;
+  position: relative;
+}
+
+
+/* Tournament Card */
 .tournament {
   background-color: white;
   padding: 15px 20px;
   margin-bottom: 15px;
   border-radius: 6px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -78,7 +159,7 @@ code {
 
 .tournament:hover {
   transform: translateY(-5px);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 /* Tournament title */
@@ -135,7 +216,8 @@ code {
   display: none;
 }
 
-.manual-content h2, .manual-content h3 {
+.manual-content h2,
+.manual-content h3 {
   color: #007bff;
 }
 
@@ -145,39 +227,37 @@ code {
   color: #333;
 }
 
-/* Main Content Container */
-.main-content {
-  display: flex;
-  width: 100%;
-  max-width: 1200px;
-  margin-top: 20px;
-  gap: 20px;
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 24px;
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 22px;
+  transition: all 0.3s;
 }
 
-/* Tournaments List */
-.tournaments-list {
-  flex: 1;
-  max-width: 600px;
-  overflow-y: auto;
-  height: 600px; /* Adjust as needed */
+.switch::after {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 22px;
+  background-color: white;
+  top: 1px;
+  left: 1px;
+  transition: all 0.3s;
 }
 
-/* Map Container */
-.map-container {
-  flex: 2;
-  height: 600px; /* Adjust as needed */
-  min-width: 300px;
-  position: relative; /* Ensure proper positioning */
+input[type='checkbox']:checked + .switch::after {
+  transform: translateX(22px);
 }
 
-/* Responsive Design */
-@media (max-width: 768px) {
-  .main-content {
-    flex-direction: column;
-  }
+input[type='checkbox']:checked + .switch {
+  background-color: #28A745;
+}
 
-  .map-container,
-  .tournaments-list {
-    height: 400px;
-  }
+.offscreen {
+  position: absolute;
+  left: -9999px;
 }

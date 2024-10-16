@@ -2,6 +2,8 @@ import { parseQueryString } from "./query-parser.js";
 
 let map;
 let markers = [];
+let showArchived = false;
+let tournaments = [];
 
 function initMap() {
   // Default center of Poland
@@ -13,28 +15,6 @@ function initMap() {
   });
 }
 
-/**
- * Determines the scale of the marker based on the number of tournaments.
- * Adjust the base scale and multiplier as needed for better visualization.
- * @param {number} count - Number of tournaments in the city.
- * @returns {number} - Scale factor for the marker.
- */
-function getMarkerScale(scale) {
-  const baseScale = 1;
-  // const scaleMultiplier = 0.5; // Adjust multiplier for size variation
-  return baseScale + 2*scale;
-}
-
-/**
- * Determines the fill color of the marker based on the number of tournaments.
- * @param {number} count - Number of tournaments in the city.
- * @returns {string} - HEX color code.
- */
-function getMarkerColor(count) {
-  if (count <= 2) return "#FF5722"; // Orange
-  if (count <= 5) return "#E64A19"; // Deep Orange
-  return "#BF360C"; // Darker Orange
-}
 
 function addMarkers(tournaments) {
   // Clear existing markers
@@ -43,7 +23,7 @@ function addMarkers(tournaments) {
 
   // Filter tournaments that have geographic information
   let tournamentsWithGeo = tournaments.filter(t => t.geo && t.geo.lat && t.geo.lng);
-  
+
   // Group tournaments by city
   let grouped = {};
   tournamentsWithGeo.forEach(t => {
@@ -53,7 +33,7 @@ function addMarkers(tournaments) {
     }
     grouped[key].push(t);
   });
-  const maxGroupSize = Math.max(...Object.values(grouped).map(group => group.length));
+
 
   // Iterate through each group to create markers
   for (let city in grouped) {
@@ -61,27 +41,14 @@ function addMarkers(tournaments) {
     let sampleTournament = grouped[city][0];
     let position = { lat: parseFloat(sampleTournament.geo.lat), lng: parseFloat(sampleTournament.geo.lng) };
 
-    // Create a custom SVG icon
-    let scale = getMarkerScale(tournamentCount/maxGroupSize)// Scale based on tournament count
 
-    const icon = {
-      path: "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z",
-      fillColor: getMarkerColor(tournamentCount),
-      fillOpacity: 0.8,
-      strokeWeight: 1,
-      strokeColor: "#FFFFFF",
-      scale,
-      anchor: new google.maps.Point(12, 22) * scale, // Scaled anchor point
-      labelOrigin: new google.maps.Point(12, 10 * scale), // Adjust label origin based on scale
-
-    };
 
     // Create the marker with label
     const marker = new google.maps.Marker({
       position,
       map,
       title: city,
-      icon: icon,
+
       label: {
         text: String(tournamentCount),
         color: "white",
@@ -115,7 +82,7 @@ function addMarkers(tournaments) {
     });
 
     markers.push(marker);
-  }          
+  }
 
   // Adjust map bounds to show all markers
   if (markers.length > 0) {
@@ -124,65 +91,6 @@ function addMarkers(tournaments) {
     map.fitBounds(bounds);
   }
 }
-
-
-// function addMarkers(tournaments) {
-//   // Clear existing markers
-//   markers.forEach(marker => marker.setMap(null));
-//   markers = [];
-//   let tournamentsWithGeo = tournaments.filter(t => t.geo && t.geo.lat && t.geo.lng);
-//   // group by t.geo.city
-//   let grouped = {};
-//   tournamentsWithGeo.forEach(t => {
-//     let key = t.geo.city;
-//     if (!grouped[key]) {
-//       grouped[key] = [];
-//     }
-//     grouped[key].push(t);
-//   });
-//   for (let key in grouped) {
-//     let t = grouped[key][0];
-//     let position = { lat: parseFloat(t.geo.lat), lng: parseFloat(t.geo.lng) };
-//     let marker = new google.maps.Marker({
-//       position, 
-//       map,
-//       title: key,
-//     })
-//     let divs = []
-
-//     for (let i=0; i<grouped[key].length; i++) {
-//       let t = grouped[key][i];
-//       divs.push(`
-//           <div>
-//             <h3><a href="${t.link}" target="_blank">${t.title}</a></h3>
-//             <p>${t.date}, ${t.geo.city}</p>
-            
-//           </div>
-//         `)
-//     }
-//     const infoWindow = new google.maps.InfoWindow({
-//       content: `
-//           <div>
-//             <h3>${key}</h3>
-//             <p>${grouped[key].length} tournaments</p>
-//           </div><br/>
-//         `+divs.join('<br/>'),
-//     });
-//     marker.addListener("click", () => {
-//       infoWindow.open(map, marker);
-//     });
-//     markers.push(marker);
-//   }          
-
-//   // Adjust map bounds to show all markers
-//   if (markers.length > 0) {
-//     const bounds = new google.maps.LatLngBounds();
-//     markers.forEach(marker => bounds.extend(marker.getPosition()));
-//     map.fitBounds(bounds);
-//   }
-// }
-
-let tournaments = [];
 
 function tournamentDiv(tournament) {
   const div = document.createElement('div');
@@ -277,6 +185,9 @@ function playerSearchScore(tournament, params) {
 }
 
 function searchScore(tournament, query) {
+  if (query === "") {
+    return 1;
+  }
   let score = 0
   let params = parseQueryString(query);
   if (params.some(p => p.key.startsWith('player.'))) {
@@ -319,11 +230,15 @@ function sortByDate(a, b) {
 
 function search(query) {
   console.log("searching for", query);
-  for (let tournament of tournaments) {
+  let filtered = tournaments;
+  if (!showArchived) {
+    filtered = tournaments.filter(t => t.date >= new Date().toISOString().slice(0, 10));
+  }
+  for (let tournament of filtered) {
     tournament.score = searchScore(tournament, query);
   }
   // filter by score > 0 and sort by date
-  return tournaments.filter(t => t.score > 0).sort(sortByDate);
+  return filtered.filter(t => t.score > 0).sort(sortByDate);
 }
 
 async function performSearch(query) {
@@ -340,14 +255,13 @@ async function performSearch(query) {
 document.addEventListener('DOMContentLoaded', () => {
   const searchBtn = document.getElementById("search-btn");
   const searchInput = document.getElementById("search");
+  const mapToggle = document.getElementById("map-toggle");
+  const archToggle = document.getElementById("arch-toggle");
+  const mapContainer = document.getElementById("map");
 
   // Search button click event
   searchBtn.onclick = async () => {
     let query = searchInput.value.trim();
-    if (query === "") {
-      // Optionally handle empty searches
-      return;
-    }
 
     // Update the URL with the search query
     const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}`;
@@ -397,6 +311,31 @@ document.addEventListener('DOMContentLoaded', () => {
       performSearch("");
     }
   });
+  // Toggle Map View On/Off
+  mapToggle.addEventListener("change", () => {
+    if (mapToggle.checked) {
+      mapContainer.style.display = "block";
+      // Trigger map resize to ensure proper rendering
+      google.maps.event.trigger(map, 'resize');
+      // Re-fit the map to show all markers
+      if (markers.length > 0) {
+        const bounds = new google.maps.LatLngBounds();
+        markers.forEach(marker => bounds.extend(marker.getPosition()));
+        map.fitBounds(bounds);
+      }
+    } else {
+      mapContainer.style.display = "none";
+
+    }
+
+  });
+
+  // Toggle Archived Tournaments On/Off
+  archToggle.addEventListener("change", () => {
+    showArchived = archToggle.checked;
+
+    performSearch(searchInput.value.trim());
+  });
 });
 
-export {loadTournaments}
+export { loadTournaments }
