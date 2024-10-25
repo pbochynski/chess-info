@@ -22,4 +22,33 @@ function parseQueryString(input) {
   return result;
 }
 
-export { parseQueryString };
+// If value contains spaces, it should be enclosed in double quotes
+function paramsToString(params) {
+  return params.map(p => {
+    // if value is type of string and contains spaces, enclose it in double quotes
+    let key = (p.key==="title") ? "" : p.key+":";
+    if (typeof p.value === "string" && p.value.includes(" ")) {
+      return `${key}"${p.value}"`;
+    } else {
+      return `${key}${p.value}`;
+    }
+  }).join(" ");
+}
+
+function addOrReplaceParam(txt, key, value) {
+  let params = parseQueryString(txt);
+  let found = false;
+  for (let param of params) {
+    if (param.key === key) {
+      param.value = value;
+      found = true;
+      break;
+    }
+  }
+  if (!found) {
+    params.push({ key, value });
+  }
+  return paramsToString(params);
+}
+
+export { parseQueryString, paramsToString, addOrReplaceParam }  

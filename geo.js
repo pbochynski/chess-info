@@ -106,6 +106,7 @@ class Geo {
     return [bestMatch, lowestDistance];
   }
   find(city){
+    city = city.replace(/^[\s.\(\)]+|[\s.\(\)]+$/g, '');
     let best = this.matches[city] || this.bestMatch(city, this.cities);
     if (best) {
       this.matches[city] = best;
@@ -116,3 +117,6 @@ class Geo {
 }
 
 export default Geo;
+
+// let geo = new Geo();  
+// console.log(geo.find(".Nakło nad Notecią."))

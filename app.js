@@ -1,10 +1,9 @@
-import { parseQueryString } from "./query-parser.js";
+import { parseQueryString, addOrReplaceParam } from "./query-parser.js";
 
 let map;
 let markers = [];
-let showArchived = false;
-let tournaments = [];
 
+let tournaments = [];
 function initMap() {
 
   map = L.map('map', {
@@ -16,71 +15,151 @@ function initMap() {
     attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
   }).addTo(map);
 
+  // Add "Search in this area" button
+  const searchButton = L.control({ position: 'topright' });
+  searchButton.onAdd = function () {
+    const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+    div.innerHTML = '<button id="searchAreaBtn" style="padding: 5px;">Szukaj w tym obszarze</button>';
+    return div;
+  };
+  searchButton.addTo(map);
+
+  // Event listener for the search button
+  document.getElementById('searchAreaBtn').addEventListener('click', searchInArea);
+  map.on('moveend', filterByArea);
+  map.on('zoomend', filterByArea);
+
+}
+function filterByArea() {
+  const bounds = map.getBounds();
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
+  let filtered = filter(sw, ne);
+  addMarkers(filtered);
+}
+function searchInArea() {
+  console.log("searching in area");
+  // Get current map bounds
+  const bounds = map.getBounds();
+  const lat1 = bounds.getSouthWest().lat;
+  const lng1 = bounds.getSouthWest().lng;
+  const lat2 = bounds.getNorthEast().lat;
+  const lng2 = bounds.getNorthEast().lng;
+
+  // comma separated string of the bounds with precision of 4 decimal places
+  let area = `${lat1.toFixed(4)},${lng1.toFixed(4)},${lat2.toFixed(4)},${lng2.toFixed(4)}`;
+
+  // Update the search input value
+  const searchInput = document.getElementById("search");
+  let q = addOrReplaceParam(searchInput.value.trim(), 'area', area)
+  searchInput.value = q;
+  performSearch(q, true);
 }
 
-function filter(city) {
+function filter(sw, ne) {
+  let filtered = []
   const tournamentsContainer = document.getElementById("tournaments");
   for (let tournament of tournamentsContainer.children) {
-    if (tournament.data.geo && tournament.data.geo.city === city) {
+    if (tournament.data.geo && tournament.data.geo.lat >= sw.lat && tournament.data.geo.lng >= sw.lng
+      && tournament.data.geo.lat <= ne.lat && tournament.data.geo.lng <= ne.lng) {
       tournament.style.display = "block";
+      filtered.push(tournament.data);
     } else {
       tournament.style.display = "none";
     }
   }
+  return filtered;
 }
+
+// Helper function to calculate the centroid of a cluster
+function calculateCentroid(tournaments) {
+  let latSum = 0;
+  let lngSum = 0;
+  let ne = { lat: tournaments[0].geo.lat, lng: tournaments[0].geo.lng };
+  let sw = { lat: tournaments[0].geo.lat, lng: tournaments[0].geo.lng };
+  tournaments.forEach(item => {
+    if (item.geo.lat > ne.lat) ne.lat = item.geo.lat;
+    if (item.geo.lng > ne.lng) ne.lng = item.geo.lng;
+    if (item.geo.lat < sw.lat) sw.lat = item.geo.lat;
+    if (item.geo.lng < sw.lng) sw.lng = item.geo.lng;
+    latSum += item.geo.lat;
+    lngSum += item.geo.lng;
+  });
+  return {
+    lat: latSum / tournaments.length,
+    lng: lngSum / tournaments.length,
+    ne, sw
+  };
+}
+
+function groupByLocation(tournaments) {
+  if (tournaments.length === 0) {
+    return [];
+  }
+  // Filter tournaments that have geographic information
+  let tournamentsWithGeo = tournaments.filter(t => t.geo && t.geo.lat && t.geo.lng)
+
+  const sw = map.getBounds().getSouthWest();
+  const ne = map.getBounds().getNorthEast();
+
+  const overlap = { lat: 0.07 * (ne.lat - sw.lat), lng: 0.07 * (ne.lng - sw.lng) }
+
+  // Group tournaments by city
+  let groups = [];
+  tournamentsWithGeo.forEach(t => {
+    let g = groups.find(g => Math.abs(g.lat - t.geo.lat) < overlap.lat
+      && Math.abs(g.lng - t.geo.lng) < overlap.lng);
+    if (!g) {
+      g = { lat: t.geo.lat, lng: t.geo.lng, tournaments: [t] };
+      groups.push(g);
+    } else {
+      g.tournaments.push(t);
+
+    }
+  });
+  for (let g of groups) {
+    let c = calculateCentroid(g.tournaments);
+    g.lat = c.lat;
+    g.lng = c.lng;
+    g.sw = c.sw;
+    g.ne = c.ne;
+  }
+
+  return groups;
+}
+
+
 function addMarkers(tournaments) {
   // Clear existing markers
   markers.forEach(marker => marker.remove());
   markers = [];
 
-  // Filter tournaments that have geographic information
-  let tournamentsWithGeo = tournaments.filter(t => t.geo && t.geo.lat && t.geo.lng);
+  let groups = groupByLocation(tournaments);
 
-  // Group tournaments by city
-  let grouped = {};
-  tournamentsWithGeo.forEach(t => {
-    let key = t.geo.city;
-    if (!grouped[key]) {
-      grouped[key] = [];
-    }
-    grouped[key].push(t);
-  });
 
-  // Define bounds to adjust viewport later
-  let bounds = [];
-
-  // Iterate through each group to create markers
-  for (let city in grouped) {
-    let tournamentCount = grouped[city].length;
-    let sampleTournament = grouped[city][0];
-    let position = { lat: parseFloat(sampleTournament.geo.lat), lng: parseFloat(sampleTournament.geo.lng) };
+  for (let g of groups) {
+    let tournamentCount = g.tournaments.length;
 
     // Create a custom marker icon with the tournament count inside
     var myIcon = L.divIcon({
       html: `<div style="background-color: blue; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; justify-content: center; align-items: center; font-size: 16px;">${tournamentCount}</div>`,
-      className: 'custom-marker'
+      className: 'custom-marker',
+      iconArchor: [20, 20]
     });
 
     // Create the marker with label
-    const marker = L.marker([position.lat, position.lng], {
-      title: `${city} - ${tournamentCount} tournament(s)`,
+    const marker = L.marker([g.lat, g.lng], {
+      title: `${tournamentCount} tournament(s)`,
       icon: myIcon
     }).addTo(map);
 
     marker.on('click', function () {
-      filter(city)
+      filter(g.sw, g.ne)
     })
 
     // Add the marker to the list
     markers.push(marker);
 
-    // Add the position to the bounds array for adjusting viewport
-    bounds.push([position.lat, position.lng]);
-  }
-
-  // Adjust map bounds to show all markers
-  if (bounds.length > 0) {
-    map.fitBounds(bounds,{maxZoom: 10});
   }
 }
 
@@ -137,20 +216,16 @@ async function loadTournaments() {
   let results = await Promise.allSettled(tasks);
   for (let result of results) {
     if (result.status === 'fulfilled') {
-      console.log("tournaments loaded");
       for (let t of result.value) {
         let id = (t.year || "") + t.id
         if (!ids[id]) {
           tournaments.push(t);
           ids[id] = true;
-        } else {
-          console.log("duplicate tournament", id);
         }
       }
     }
   }
   tournaments.sort((a, b) => a.date.localeCompare(b.date));
-  console.log("Loaded tournaments:", tournaments.length);
 }
 function playerSearchScore(tournament, params) {
   let score = 0
@@ -177,33 +252,49 @@ function playerSearchScore(tournament, params) {
   return score;
 }
 
-function searchScore(tournament, query) {
-  if (query === "") {
-    return 1;
+function searchScore(tournament, params) {
+  if (!params.some(p => p.key === 'archived')) {
+    params.push({ key: 'archived', value: 'false' });
   }
-  let score = 0
-  let params = parseQueryString(query);
-  if (params.some(p => p.key.startsWith('player.'))) {
-    score += playerSearchScore(tournament, params);
-    if (score == 0) {
-      return 0;
-    }
-  }
+
   let ok = true;
   for (let param of params) {
-    if (!param.key.startsWith('player.')) {
-      if (!tournament[param.key] || !tournament[param.key].toString().toLowerCase().includes(param.value.toLowerCase())) {
+    if (param.key === 'archived') {
+      if (param.value === 'false' && tournament.date < new Date().toISOString().slice(0, 10)) {
         ok = false;
         break;
       }
-      score += 1;
+      continue;
+    }
+    if (param.key.startsWith('player.')) {
+      let playerScore = playerSearchScore(tournament, playerParams);
+      if (playerScore == 0) {
+        ok = false;
+        break
+      }
+      continue;
+    }
+    if (param.key === 'area') {
+      let area = param.value.split(',').map(x => parseFloat(x));
+      if (tournament.geo && tournament.geo.lat && tournament.geo.lng) {
+        let lat = parseFloat(tournament.geo.lat);
+        let lng = parseFloat(tournament.geo.lng);
+        if (lat < area[0] || lat > area[2] || lng < area[1] || lng > area[3]) {
+          ok = false;
+          break;
+        }
+      } else {
+        ok = false;
+        break;
+      }
+      continue;
+    }
+    if (!tournament[param.key] || !tournament[param.key].toString().toLowerCase().includes(param.value.toLowerCase())) {
+      ok = false;
+      break;
     }
   }
-  if (!ok) {
-    score = 0;
-  }
-  return score;
-
+  return ok ? 1 : 0;
 }
 
 function sortByDate(a, b) {
@@ -221,28 +312,33 @@ function sortByDate(a, b) {
 
 }
 
-function search(query) {
-  console.log("searching for", query);
-  let filtered = tournaments;
-  if (!showArchived) {
-    filtered = tournaments.filter(t => t.date >= new Date().toISOString().slice(0, 10));
-  }
-  for (let tournament of filtered) {
-    tournament.score = searchScore(tournament, query);
-  }
-  // filter by score > 0 and sort by date
-  return filtered.filter(t => t.score > 0).sort(sortByDate);
-}
 
-async function performSearch(query) {
+function performSearch(query, pushHistory = true) {
+  console.log("performing search for", query, "pushHistory", pushHistory);
+  console.log("current history state", history.state);
+  // Update the URL with the search query
+  if (pushHistory) {
+
+    if (!history.state || history.state.query !== query) {
+      const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}`;
+      history.pushState({ query }, "", newUrl);
+      console.log("pushing history state", history.state);
+    }
+  }
+
   const tournamentsContainer = document.getElementById("tournaments");
-  let tournaments = search(query);
-  console.log("search results:", tournaments.length);
+
+  let params = parseQueryString(query);
+
+  // filter by score > 0 and sort by date
+  let results = tournaments.filter(t => searchScore(t, params) > 0).sort(sortByDate);
+
+  console.log("search results:", results.length);
   tournamentsContainer.innerHTML = "";
-  tournaments.forEach(tournament => {
+  results.forEach(tournament => {
     tournamentsContainer.appendChild(tournamentDiv(tournament));
   });
-  addMarkers(tournaments);
+  addMarkers(results);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -251,16 +347,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const mapToggle = document.getElementById("map-toggle");
   const archToggle = document.getElementById("arch-toggle");
   const mapContainer = document.getElementById("map");
+  const tournamentsContainer = document.getElementById("tournaments");
 
   // Search button click event
   searchBtn.onclick = async () => {
     let query = searchInput.value.trim();
-
-    // Update the URL with the search query
-    const newUrl = `${window.location.pathname}?q=${encodeURIComponent(query)}`;
-    history.pushState({ query }, "", newUrl);
-
-    // Perform the search and update the UI
     performSearch(query);
   };
 
@@ -274,9 +365,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Handle back/forward navigation
   window.addEventListener("popstate", (event) => {
+    console.log("popstate event", event.state);
     if (event.state && event.state.query) {
       searchInput.value = event.state.query;
-      performSearch(event.state.query);
+      let qp = parseQueryString(event.state.query);
+      archToggle.checked = qp.find(p => p.key === 'archived' && p.value === 'true') ? true : false;
+      performSearch(event.state.query, false);
+      if (qp.find(p => p.key === 'area')) {
+        let area = qp.find(p => p.key === 'area').value.split(',').map(x => parseFloat(x));
+        map.fitBounds([[area[0], area[1]], [area[2], area[3]]]);
+      }
     } else {
       // Optionally handle the state when there's no query (e.g., clear results)
       searchInput.value = "";
@@ -285,24 +383,25 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // On initial load, check if there's a query in the URL
+  initMap(); // Initialize the map
   const urlParams = new URLSearchParams(window.location.search);
   const initialQuery = urlParams.get('q');
   if (initialQuery) {
     searchInput.value = initialQuery;
+    let qp = parseQueryString(initialQuery);
+    archToggle.checked = qp.find(p => p.key === 'archived' && p.value === 'true') ? true : false;
     // Replace the state to ensure popstate works correctly
     history.replaceState({ query: initialQuery }, "", window.location.href);
-    performSearch(initialQuery);
+    performSearch(initialQuery, false);
+    if (qp.find(p => p.key === 'area')) {
+      let area = qp.find(p => p.key === 'area').value.split(',').map(x => parseFloat(x));
+      map.fitBounds([[area[0], area[1]], [area[2], area[3]]]);
+    }
   }
 
   // Load tournaments data
   loadTournaments().then(() => {
-    initMap(); // Initialize the map after loading tournaments
-    if (initialQuery) {
-      performSearch(initialQuery);
-    } else {
-      // Optionally display all tournaments or a default view
-      performSearch("");
-    }
+      performSearch(initialQuery || "", false);
   });
   // Toggle Map View On/Off
   mapToggle.addEventListener("change", () => {
@@ -325,9 +424,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Toggle Archived Tournaments On/Off
   archToggle.addEventListener("change", () => {
-    showArchived = archToggle.checked;
-
-    performSearch(searchInput.value.trim());
+    let q = addOrReplaceParam(searchInput.value.trim(), 'archived', archToggle.checked)
+    searchInput.value = q;
+    performSearch(q);
   });
 });
 
