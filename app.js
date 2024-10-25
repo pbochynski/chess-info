@@ -194,12 +194,12 @@ async function loadTournamentsJson(year, month) {
 
 // Load tournaments from a JSON files named tournaments-${year}-${month}.json from last 4 years
 // using fetch API 
-async function loadTournaments() {
+async function loadTournaments(query) {
   let endDate = new Date();
   endDate.setMonth(endDate.getMonth() + 6);
   let year = endDate.getFullYear();
   let month = endDate.getMonth() + 1;
-  let monthsToScrape = 10 * 12 + 6; // 10 years back + 6 months ahead
+  let monthsToScrape = 5 * 12 + 6; // 5 years back + 6 months ahead
 
 
   let tasks = [];
@@ -392,15 +392,15 @@ document.addEventListener('DOMContentLoaded', () => {
     archToggle.checked = qp.find(p => p.key === 'archived' && p.value === 'true') ? true : false;
     // Replace the state to ensure popstate works correctly
     history.replaceState({ query: initialQuery }, "", window.location.href);
-    performSearch(initialQuery, false);
     if (qp.find(p => p.key === 'area')) {
       let area = qp.find(p => p.key === 'area').value.split(',').map(x => parseFloat(x));
       map.fitBounds([[area[0], area[1]], [area[2], area[3]]]);
     }
+    // performSearch(initialQuery, false);
   }
 
   // Load tournaments data
-  loadTournaments().then(() => {
+  loadTournaments(initialQuery || "").then(() => {
       performSearch(initialQuery || "", false);
   });
   // Toggle Map View On/Off
