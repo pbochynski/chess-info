@@ -79,14 +79,14 @@ function addGeoTagsToFiles() {
 
 async function scrapeAll() {
   await fetchAll();
-  // addGeoTagsToFiles();
+  addGeoTagsToFiles();
   let startDate = process.env.START_DATE 
   let endDate = process.env.END_DATE
   if (!startDate || !endDate) {
     console.log('Skipping update. Please provide START_DATE and END_DATE environment variables to update data.');
     return;
   }
-  
+    
   while (startDate<=endDate) {
     let year = Number(startDate.slice(0, 4));
     let month = Number(startDate.slice(5, 7));
