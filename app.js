@@ -267,7 +267,7 @@ function searchScore(tournament, params) {
       continue;
     }
     if (param.key.startsWith('player.')) {
-      let playerScore = playerSearchScore(tournament, playerParams);
+      let playerScore = playerSearchScore(tournament, params);
       if (playerScore == 0) {
         ok = false;
         break
