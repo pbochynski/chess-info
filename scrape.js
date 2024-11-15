@@ -1,8 +1,8 @@
-import { fetchTournaments as caTournaments} from "./chessarbiter-scraper.js";
-import { fetchTournaments as cmTournaments} from "./chessmanager-scraper.js";
+import { fetchTournaments as caTournaments } from "./chessarbiter-scraper.js";
+import { fetchTournaments as cmTournaments } from "./chessmanager-scraper.js";
 import ThrottledFetch from './throttle.js'
 import * as fs from 'fs';
-import Geo from './geo.js'; 
+import Geo from './geo.js';
 
 const queue = new ThrottledFetch(10, "GithubPages")
 const geo = new Geo();
@@ -20,10 +20,10 @@ async function scrape(year, month) {
   }
   tournaments = addGeoTags(tournaments);
   console.log(year, month, 'tournaments:', tournaments.length);
-  
+
   fs.writeFileSync(`tournaments-${year}-${month}.json`, JSON.stringify(tournaments, null, 2));
 }
-async function fetchFromGithubPages(year, month) {  
+async function fetchFromGithubPages(year, month) {
   const baseUrl = 'https://pbochynski.github.io/chess-info/';
   let filename = `tournaments-${year}-${month}.json`;
   let url = `${baseUrl}${filename}`;
@@ -38,9 +38,9 @@ async function fetchAll() {
   let endDate = new Date();
   endDate.setMonth(endDate.getMonth() + 6);
   let year = endDate.getFullYear();
-  let month = endDate.getMonth()+1; // 0-based to 1-based
+  let month = endDate.getMonth() + 1; // 0-based to 1-based
   let monthsToScrape = 126; // 10 years back + 6 months ahead 
-  let tasks = []; 
+  let tasks = [];
   while (monthsToScrape > 0) {
     tasks.push(fetchFromGithubPages(year, month));
     month--;
@@ -49,13 +49,13 @@ async function fetchAll() {
       month = 12;
     }
     monthsToScrape--;
-  }  
+  }
   await Promise.allSettled(tasks);
 }
 
 function addGeoTags(tournaments) {
   for (let t of tournaments) {
-    let best = geo.find(t.city);  
+    let best = geo.find(t.city);
     if (best) {
       t.geo = best
     }
@@ -79,15 +79,17 @@ function addGeoTagsToFiles() {
 
 async function scrapeAll() {
   await fetchAll();
-  // addGeoTagsToFiles();
-  let startDate = process.env.START_DATE 
+  if (process.env.GEO_TAGS == 'true') {
+    addGeoTagsToFiles();
+  }
+  let startDate = process.env.START_DATE
   let endDate = process.env.END_DATE
   if (!startDate || !endDate) {
     console.log('Skipping update. Please provide START_DATE and END_DATE environment variables to update data.');
     return;
   }
-    
-  while (startDate<=endDate) {
+
+  while (startDate <= endDate) {
     let year = Number(startDate.slice(0, 4));
     let month = Number(startDate.slice(5, 7));
     await scrape(year, month);
@@ -98,6 +100,6 @@ async function scrapeAll() {
       month++;
     }
     startDate = `${year}-${month.toString().padStart(2, '0')}`;
-  }  
+  }
 }
 scrapeAll();

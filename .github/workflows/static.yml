@@ -17,6 +17,10 @@ on:
         description: 'End date in yyyy-mm format'
         required: true
         default: '2025-02'
+      GEO_TAGS:
+        description: 'Update geo tags for archived tournaments'
+        required: true
+        default: 'false'  
   
   schedule:
     - cron: '0 */1 * * *'
