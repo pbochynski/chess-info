@@ -79,7 +79,7 @@ function addGeoTagsToFiles() {
 
 async function scrapeAll() {
   await fetchAll();
-  // addGeoTagsToFiles();
+  addGeoTagsToFiles();
   let startDate = process.env.START_DATE 
   let endDate = process.env.END_DATE
   if (!startDate || !endDate) {
