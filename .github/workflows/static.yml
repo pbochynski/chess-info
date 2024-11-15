@@ -67,6 +67,7 @@ jobs:
         env:
           START_DATE: ${{ github.event.inputs.START_DATE }}
           END_DATE: ${{ github.event.inputs.END_DATE }}
+          GEO_TAGS: ${{ github.event.inputs.GEO_TAGS }}
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
