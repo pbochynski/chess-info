@@ -105,8 +105,9 @@ function extractPagination(html) {
   return offsets 
 }
 async function fetchTournaments(year, month) {
-  const start = `${year}-${month}-01` 
-  const end = `${year}-${month}-${lastDayOfMonth(year, month)}`
+  // pad month with leading zero
+  const start = `${year}-${month.toString().padStart(2, '0')}-01` 
+  const end = `${year}-${month.toString().padStart(2, '0')}-${lastDayOfMonth(year, month)}`
   
   let offset = 0
   let tournaments = []  
