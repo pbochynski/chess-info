@@ -21,16 +21,25 @@ async function fetchTournaments(year, month) {
 }
 
 async function fetchPlayer(tournament, n) {
-  const playerUrl = `http://www.chessarbiter.com/turnieje/${tournament.year}/${tournament.id}/card_z$${n}`
+  const playerUrl = `http://www.chessarbiter.com/turnieje/${tournamentYearPath(tournament)}/${tournament.id}/card_z$${n}`
   let res = await queue.throttledFetch(playerUrl)
   let txt = await res.text()
   let player = extractPlayer(txt)
   tournament.players.push(player)
   return player
 }
+function tournamentYearPath(tournament) {
+  const yearRegex = /\/open\.php\?turn=(\d+)\//
+  let matchY = tournament.link.match(yearRegex)
+  let year = tournament.year
+  if (matchY) {
+    year = matchY[1]
+  }
+  return year
+}
 
 async function fetchCaproPlayers(tournament) {
-  const caproUrl = `https://www.chessarbiter.com/turnieje/${tournament.year}/${tournament.id}/capro_tournament.js`
+  const caproUrl = `https://www.chessarbiter.com/turnieje/${tournamentYearPath(tournament)}/${tournament.id}/capro_tournament.js`
   let res = await queue.throttledFetch(caproUrl)
   let txt = await res.text()
   let arrayRegex = /var (A\d+) = (.*);/gm
@@ -55,8 +64,8 @@ async function fetchCaproPlayers(tournament) {
   return tournament.players
 }
 
-async function fetchPlayers(tournament) {
-  const playersUrl = `http://www.chessarbiter.com/turnieje/${tournament.year}/${tournament.id}/list_of_players`
+async function  fetchPlayers(tournament) {
+  const playersUrl = `http://www.chessarbiter.com/turnieje/${tournamentYearPath(tournament)}/${tournament.id}/list_of_players`
   let res = await queue.throttledFetch(playersUrl)
   if (res.status !== 200) {
     await fetchCaproPlayers(tournament)
