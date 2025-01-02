@@ -53,21 +53,28 @@ jobs:
           node-version: 20
 
       - name: Set dates for cron jobs
-        if: github.event_name == 'schedule'
+        if: ${{ github.event_name == 'schedule' }}
         run: |
           START_DATE=$(date +'%Y-%m')
           END_DATE=$(date -v +6m +'%Y-%m' 2>/dev/null || date -d "+6 months" +'%Y-%m')
           echo "START_DATE=$START_DATE" >> $GITHUB_ENV
           echo "END_DATE=$END_DATE" >> $GITHUB_ENV
+  
+      - name: Set dates for manual runs
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          echo "START_DATE=${{ github.event.inputs.START_DATE }}" >> $GITHUB_ENV
+          echo "END_DATE=${{ github.event.inputs.END_DATE }}" >> $GITHUB_ENV
 
       - name: Run scraping
         run: |
           # Run your build script here
           node scrape.js
         env:
-          START_DATE: ${{ github.event.inputs.START_DATE }}
-          END_DATE: ${{ github.event.inputs.END_DATE }}
-          GEO_TAGS: ${{ github.event.inputs.GEO_TAGS }}
+          START_DATE: ${{ env.START_DATE }}
+          END_DATE: ${{ env.END_DATE }}
+          GEO_TAGS: ${{ github.event.inputs.GEO_TAGS || 'false' }}
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
